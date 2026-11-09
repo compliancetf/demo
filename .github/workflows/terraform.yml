@@ -68,6 +68,19 @@ jobs:
           terraform_version: 1.17.1
           terraform_wrapper: false
 
+      # With an empty role-to-assume the AWS action falls back to the runner's own credentials.
+      - name: Check AWS settings
+        env:
+          ROLE: ${{ secrets.AWS_PLAN_ROLE_ARN }}
+          BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+          REGION: ${{ vars.AWS_REGION }}
+        run: |
+          missing=0
+          [ -n "${ROLE}" ] || { echo "::error::Secret AWS_PLAN_ROLE_ARN is not set."; missing=1; }
+          [ -n "${BUCKET}" ] || { echo "::error::Secret TF_STATE_BUCKET is not set."; missing=1; }
+          [ -n "${REGION}" ] || { echo "::error::Variable AWS_REGION is not set."; missing=1; }
+          exit "${missing}"
+
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ secrets.AWS_PLAN_ROLE_ARN }}
