@@ -2,7 +2,7 @@
 locals {
   # insecure on purpose: compliance.tf enforces cloudwatch_log_group_retention_period_365
   # demo:insecure log_retention_days = 7
-  log_retention_days = 365 # demo:secure
+  log_retention_days = 30 # demo:secure
 
   # insecure on purpose: compliance.tf enforces log_group_encryption_at_rest_enabled
   # demo:insecure log_kms_key_id = null
@@ -10,8 +10,7 @@ locals {
 }
 
 module "ecs" {
-  source  = "iso27001.compliance.tf/terraform-aws-modules/ecs/aws"
-  version = "7.6.1"
+  source = "https://iso27001.compliance.tf/terraform-aws-modules/ecs/aws?version=7.6.1&disable=cloudwatch_log_group_retention_period_365"
 
   cluster_name = var.name
 
