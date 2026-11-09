@@ -41,7 +41,7 @@ _Not generated yet. Runs on the next push to `master`._
 | 1 | `baseline` | The app on upstream `terraform-aws-modules` sources with a few insecure inputs, applied in advance. `ctfkit scan` lists every module source outside compliance.tf. |
 | 2 | `demo/iso27001`, commit 1 | Only the source lines change to `iso27001.compliance.tf`. `terraform plan` fails with one `Control '<id>'` error per insecure input, each with its fix. |
 | 3 | `demo/iso27001`, commit 2 | The insecure lines are deleted. The plan is clean: settings change in place, nothing is created or destroyed. |
-| 4 | `demo/log-retention-exception` | The ECS module switches off `cloudwatch_log_group_retention_period_365` for a dev cost reason. ctfkit flags the disabled control by name. |
+| 4 | `demo/log-retention-exception` | The ECS module switches off `cloudwatch_log_group_retention_period_365` for a dev cost reason. ctfkit flags the disabled control by name; recording it in `.github/ctfkit/exceptions.yaml` (code owner review) clears the check. |
 
 `master` is the end state: ISO 27001 sources, secure inputs, one recorded exception.
 [DEMO.md](DEMO.md) has the commands for each step.

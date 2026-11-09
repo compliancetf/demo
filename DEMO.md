@@ -59,8 +59,15 @@ make verify
 make exception-pr
 ```
 
-30-day container logs: `?disable=cloudwatch_log_group_retention_period_365` on one module,
-an entry in `.github/ctfkit/exceptions.yaml`, and a code owner review on `.github/`.
+30-day container logs: `?disable=cloudwatch_log_group_retention_period_365` on one module.
+The plan passes, but `ctfkit scan` fails and names the disabled control.
+
+```sh
+make record-exception
+```
+
+An entry in `.github/ctfkit/exceptions.yaml` with owner, approver and review date turns the scan green.
+`.github/` needs a code owner review, so nobody approves their own exception.
 
 ## 6. Evidence for the auditor
 

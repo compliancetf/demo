@@ -24,7 +24,7 @@ EXPECTED_CONTROLS := kms_cmk_rotation_enabled sns_topic_encrypted_at_rest vpc_su
 # Resource precondition: Terraform checks it only once validations pass, so it gets its own plan.
 PRECONDITION_CONTROL := ecs_service_not_publicly_accessible
 
-.PHONY: help check-tools login bootstrap init scan plan report baseline-branch apply-baseline verify verify-fail demo-pr demo-fix exception-pr destroy clean require-clean require-backend
+.PHONY: help check-tools login bootstrap init scan plan report baseline-branch apply-baseline verify verify-fail demo-pr demo-fix exception-pr record-exception destroy clean require-clean require-backend
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -130,7 +130,7 @@ demo-fix: require-clean ## On demo/iso27001: apply the remediations (secure inpu
 	git commit -m "fix: apply compliance.tf remediations"
 	git push origin demo/iso27001
 
-exception-pr: require-clean ## After demo-fix: branch demo/log-retention-exception, 30-day logs with a recorded exception, open a PR
+exception-pr: require-clean ## After demo-fix: branch demo/log-retention-exception, 30-day logs with the retention control disabled, open a PR
 	git checkout -B demo/log-retention-exception demo/iso27001
 	perl -0777 -pi -e 's{^([ \t]*)source[ \t]*=[ \t]*"iso27001\.compliance\.tf/terraform-aws-modules/ecs/aws"[ \t]*\n[ \t]*version[ \t]*=[ \t]*"([^"]+)"[ \t]*\n}{$$1source = "https://iso27001.compliance.tf/terraform-aws-modules/ecs/aws?version=$$2&disable=cloudwatch_log_group_retention_period_365"\n}m; s{^([ \t]*log_retention_days[ \t]*=[ \t]*)\d+}{$${1}30}m' infra/ecs.tf
 	git add infra/ecs.tf
@@ -138,7 +138,24 @@ exception-pr: require-clean ## After demo-fix: branch demo/log-retention-excepti
 	git push --force-with-lease -u origin demo/log-retention-exception
 	gh pr create --base demo/iso27001 --head demo/log-retention-exception \
 	  --title "dev: keep 30-day container logs for cost" \
-	  --body "Keeps container logs for 30 days instead of 365 and records the exception for cloudwatch_log_group_retention_period_365 on the ecs module."
+	  --body "Keeps container logs for 30 days instead of 365 by disabling cloudwatch_log_group_retention_period_365 on the ecs module. ctfkit fails the check until the exception is recorded."
+
+record-exception: require-clean ## On demo/log-retention-exception: record the exception in the ctfkit registry, push to the open PR
+	git checkout demo/log-retention-exception
+	printf '%s\n' \
+	  '' \
+	  '  - id: demo-ecs-log-retention' \
+	  '    control: cloudwatch_log_group_retention_period_365' \
+	  '    resource: module.ecs' \
+	  '    justification: >-' \
+	  '      Dev environment keeps container logs for 30 days for cost. Production keeps the 365-day' \
+	  '      retention the control requires.' \
+	  '    owner: antonbabenko' \
+	  '    approved_by: antonbabenko' \
+	  '    review_date: "2027-06-30"' >> .github/ctfkit/exceptions.yaml
+	git add .github/ctfkit/exceptions.yaml
+	git commit -m "chore: record the 30-day log retention exception"
+	git push origin demo/log-retention-exception
 
 destroy: require-backend ## Destroy the demo stack (asks for confirmation)
 	$(TF) destroy
