@@ -1,6 +1,6 @@
 # Lines tagged demo:* are toggled by scripts/demo-mode.sh for the live demo.
 module "ops" {
-  source  = "iso27001.compliance.tf/terraform-aws-modules/ec2-instance/aws"
+  source  = "terraform-aws-modules/ec2-instance/aws"
   version = "6.4.1"
 
   name              = "${var.name}-ops"
@@ -26,5 +26,5 @@ module "ops" {
   }
 
   # insecure on purpose: compliance.tf enforces ec2_instance_uses_imdsv2
-  # demo:insecure metadata_options = { http_tokens = "optional" }
+  metadata_options = { http_tokens = "optional" } # demo:insecure
 }

@@ -1,16 +1,16 @@
 # Lines tagged demo:* are toggled by scripts/demo-mode.sh for the live demo.
 locals {
   # insecure on purpose: compliance.tf enforces cloudwatch_log_group_retention_period_365
-  # demo:insecure log_retention_days = 7
-  log_retention_days = 365 # demo:secure
+  log_retention_days = 7 # demo:insecure
+  # demo:secure log_retention_days = 365
 
   # insecure on purpose: compliance.tf enforces log_group_encryption_at_rest_enabled
-  # demo:insecure log_kms_key_id = null
-  log_kms_key_id = module.kms.key_arn # demo:secure
+  log_kms_key_id = null # demo:insecure
+  # demo:secure log_kms_key_id = module.kms.key_arn
 }
 
 module "ecs" {
-  source  = "iso27001.compliance.tf/terraform-aws-modules/ecs/aws"
+  source  = "terraform-aws-modules/ecs/aws"
   version = "7.6.1"
 
   cluster_name = var.name
@@ -27,7 +27,7 @@ module "ecs" {
       subnet_ids = module.vpc.private_subnets
 
       # insecure on purpose: compliance.tf enforces ecs_service_not_publicly_accessible
-      # demo:insecure assign_public_ip = true
+      assign_public_ip = true # demo:insecure
 
       container_definitions = {
         nginx = {
