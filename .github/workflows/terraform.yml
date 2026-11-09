@@ -40,6 +40,8 @@ jobs:
         uses: compliancetf/ctfkit-action@a138129e2c59f256e38440e070f88f3ac490d2dd # v0.4.0
         with:
           command: scan
+          # 0.5.0 embeds only CIS v6.0 controls, so control-keyed ISO exceptions stop matching.
+          version: v0.4.1
           stage: pre_plan
           chdir: infra
           exceptions: .github/ctfkit/exceptions.yaml
@@ -157,6 +159,8 @@ jobs:
         uses: compliancetf/ctfkit-action@a138129e2c59f256e38440e070f88f3ac490d2dd # v0.4.0
         with:
           command: scan
+          # 0.5.0 embeds only CIS v6.0 controls, so control-keyed ISO exceptions stop matching.
+          version: v0.4.1
           plan: infra/plan.json
           chdir: infra
           exceptions: .github/ctfkit/exceptions.yaml
@@ -164,8 +168,8 @@ jobs:
           sarif: "false"
           fail-on: error
 
-      # Coverage report only; the scans decide pass or fail. continue-on-error: ctfkit 0.4.1 exits 2
-      # when a served manifest names a control newer than its embedded catalog.
+      # Coverage report only; the scans decide pass or fail. Uses the latest ctfkit:
+      # 0.4.1 stops on a served control its embedded catalog lacks.
       - name: ctfkit report
         if: ${{ !cancelled() && steps.show.outcome == 'success' }}
         continue-on-error: true
