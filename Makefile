@@ -45,15 +45,15 @@ bootstrap: ## Create the state bucket and GitHub plan role (local state), write 
 	  "$$(terraform -chdir=bootstrap output -raw state_bucket)" \
 	  "$$(terraform -chdir=bootstrap output -raw region)" > infra/backend.hcl
 	@echo "wrote infra/backend.hcl"
-	@echo "Repository variable: AWS_REGION=$$(terraform -chdir=bootstrap output -raw region)"
-	@echo "Repository secrets: TF_STATE_BUCKET=$$(terraform -chdir=bootstrap output -raw state_bucket)" \
+	@echo "Repository variables: AWS_REGION=$$(terraform -chdir=bootstrap output -raw region)" \
+	  "TF_STATE_BUCKET=$$(terraform -chdir=bootstrap output -raw state_bucket)" \
 	  "AWS_PLAN_ROLE_ARN=$$(terraform -chdir=bootstrap output -raw plan_role_arn)"
 
 require-backend:
 	@[ -f infra/backend.hcl ] || { echo "infra/backend.hcl is missing: run make bootstrap" >&2; exit 1; }
 
 init: require-backend ## terraform init with the remote backend
-	$(TF) init -backend-config=backend.hcl
+	$(TF) init -reconfigure -backend-config=backend.hcl
 
 scan: ## ctfkit scan of the Terraform code (before plan)
 	ctfkit scan infra --stage pre_plan --exceptions .github/ctfkit/exceptions.yaml
@@ -79,13 +79,13 @@ baseline-branch: require-clean ## Create or refresh branch baseline: master with
 
 apply-baseline: require-clean require-backend ## Check out baseline and apply it (asks for confirmation)
 	git checkout baseline
-	$(TF) init -backend-config=backend.hcl
+	$(TF) init -reconfigure -backend-config=backend.hcl
 	$(TF) apply
 
 verify: require-backend login ## On master (ISO sources, secure inputs): plan, assert in-place changes only, report
 	@grep -q 'iso27001.compliance.tf' infra/*.tf || { echo "infra/ does not use compliance.tf sources: check out master" >&2; exit 1; }
 	@! grep -q '# demo:insecure$$' infra/*.tf || { echo "infra/ has active demo:insecure lines: run $(MODE) secure" >&2; exit 1; }
-	$(TF) init -upgrade -backend-config=backend.hcl
+	$(TF) init -reconfigure -upgrade -backend-config=backend.hcl
 	$(TF) plan -out=tfplan
 	$(TF) show -json tfplan > $(PLAN_JSON)
 	scripts/check-plan.sh $(PLAN_JSON)

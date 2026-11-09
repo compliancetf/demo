@@ -54,7 +54,7 @@ Create in advance:
 2. A compliance.tf token with ISO 27001 access ([free trial](https://compliance.tf/free-trial)): `export CTF_REGISTRY_TOKEN=...`
 3. Tools: `terraform` >= 1.10, `aws`, `jq`, `gh`, [`ctfkit`](https://github.com/compliancetf/ctfkit) (`brew install compliancetf/tap/ctfkit`).
 4. `make bootstrap`: creates the state bucket and the read-only GitHub OIDC plan role, and writes `infra/backend.hcl`.
-5. In the GitHub repo: variable `AWS_REGION`; secrets `CTF_REGISTRY_TOKEN`, `AWS_PLAN_ROLE_ARN` and `TF_STATE_BUCKET` (from the bootstrap outputs); branch protection on `master` requiring the checks `ctfkit scan` and `terraform plan`, with code owner review; allow `github-actions[bot]` to push the README report.
+5. In the GitHub repo: variables `AWS_REGION`, `AWS_PLAN_ROLE_ARN` and `TF_STATE_BUCKET` (from the bootstrap outputs); secret `CTF_REGISTRY_TOKEN`; branch protection on `master` requiring the checks `ctfkit scan` and `terraform plan`, with code owner review; allow `github-actions[bot]` to push the README report.
 
 Then:
 

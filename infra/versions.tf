@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.10"
+  required_version = "~> 1.10"
 
   required_providers {
     aws = {
@@ -11,6 +11,7 @@ terraform {
   # bucket and region come from backend.hcl (make bootstrap writes it)
   backend "s3" {
     key          = "demo/infra.tfstate"
+    encrypt      = true
     use_lockfile = true
   }
 }
