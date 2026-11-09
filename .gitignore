@@ -1,0 +1,9 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+bootstrap/terraform.tfstate*
+.netrc
+plan.json
+tfplan
+backend.hcl
+bootstrap/terraform.tfvars

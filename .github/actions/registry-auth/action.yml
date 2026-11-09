@@ -1,0 +1,42 @@
+name: compliance.tf registry auth
+description: >-
+  Authenticate Terraform to iso27001.compliance.tf. Registry-form module sources read
+  TF_TOKEN_iso27001_compliance_tf; HTTPS-form sources only read a netrc file, so both are set.
+  Fails closed when the token is empty.
+
+inputs:
+  token:
+    description: compliance.tf registry token, normally secrets.CTF_REGISTRY_TOKEN.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Configure registry credentials
+      shell: bash
+      env:
+        CTF_TOKEN: ${{ inputs.token }}
+      run: |
+        set -euo pipefail
+        if [ -z "${CTF_TOKEN}" ]; then
+          echo "::error::The CTF_REGISTRY_TOKEN secret is empty or not set. Add it under Settings > Secrets and variables > Actions (and as a Dependabot secret for Dependabot pull requests). Modules from iso27001.compliance.tf cannot be downloaded without it." >&2
+          exit 1
+        fi
+        # The token is written to GITHUB_ENV and a netrc line: whitespace would split or inject lines.
+        case "${CTF_TOKEN}" in
+          *[[:space:]]*)
+            echo "::error::The CTF_REGISTRY_TOKEN secret contains whitespace or a line break; store the bare token." >&2
+            exit 1
+            ;;
+        esac
+        echo "::add-mask::${CTF_TOKEN}"
+        netrc="${RUNNER_TEMP}/.netrc"
+        (
+          umask 077
+          printf 'machine iso27001.compliance.tf login token password %s\n' "${CTF_TOKEN}" > "${netrc}"
+        )
+        chmod 600 "${netrc}"
+        {
+          echo "TF_TOKEN_iso27001_compliance_tf=${CTF_TOKEN}"
+          echo "NETRC=${netrc}"
+        } >> "${GITHUB_ENV}"

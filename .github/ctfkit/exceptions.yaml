@@ -1,0 +1,31 @@
+# ctfkit exception registry, passed to compliancetf/ctfkit-action through its `exceptions` input.
+# Format: https://github.com/compliancetf/ctfkit/blob/master/docs/configuration.md#exceptions
+#
+# A pull request can edit this file, and the pull_request run reads the copy from the pull request.
+# CODEOWNERS owns .github/, so turn on "Require review from Code Owners" in branch protection:
+# an exception added in a pull request then cannot merge without a code owner's approval.
+#
+# An entry stops suppressing the day after review_date, and the finding fails the check again.
+schema_version: "1.0"
+
+exceptions:
+  - id: demo-alb-public-entry
+    control: elb_application_classic_network_lb_prohibit_public_access
+    resource: module.alb
+    justification: >-
+      The application load balancer is the public entry point of the demo by design. The module
+      source disables this control with ?disable=; every other control on the module stays enforced.
+    owner: antonbabenko
+    approved_by: antonbabenko
+    review_date: "2027-06-30"
+
+  - id: demo-alb-logs-raw-bucket
+    control: s3_bucket_object_lock_enabled
+    resource: aws_s3_bucket.alb_logs
+    justification: >-
+      ALB access log delivery supports only SSE-S3, while the ISO 27001 s3-bucket module enforces
+      KMS default encryption, so the log bucket stays a plain resource (ctfkit reports it under the object lock control) with SSE-S3, versioning,
+      lifecycle and public access blocked.
+    owner: antonbabenko
+    approved_by: antonbabenko
+    review_date: "2027-06-30"

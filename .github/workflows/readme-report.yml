@@ -1,0 +1,88 @@
+name: readme report
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "infra/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: readme-report
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: update README controls
+    runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/env=compliancetf
+    steps:
+      # Credentials stay in the checkout: the last step pushes with them.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.17.1
+          terraform_wrapper: false
+
+      - uses: ./.github/actions/registry-auth
+        with:
+          token: ${{ secrets.CTF_REGISTRY_TOKEN }}
+
+      # No backend and no AWS: report only reads the module cache in infra/.terraform/modules.
+      - name: terraform init
+        run: terraform -chdir=infra init -backend=false -input=false
+
+      - name: ctfkit report
+        id: report
+        uses: compliancetf/ctfkit-action@a138129e2c59f256e38440e070f88f3ac490d2dd # v0.4.0
+        with:
+          command: report
+          path: infra
+          exceptions: .github/ctfkit/exceptions.yaml
+          pr-comment: "false"
+          sarif: "false"
+          fail-on: never
+
+      - name: Replace the report section in README.md
+        env:
+          REPORT_MD: ${{ steps.report.outputs.markdown }}
+        run: |
+          set -euo pipefail
+          if [ -z "${REPORT_MD}" ] || [ ! -f "${REPORT_MD}" ]; then
+            echo "::error::ctfkit report wrote no markdown file." >&2
+            exit 1
+          fi
+          python3 -I - README.md "${REPORT_MD}" <<'PY'
+          import pathlib, sys
+          start, end = "<!-- CTFKIT_REPORT_START -->", "<!-- CTFKIT_REPORT_END -->"
+          readme = pathlib.Path(sys.argv[1])
+          text = readme.read_text(encoding="utf-8")
+          # A marker inside the report would break the next run's search, so it is dropped.
+          report = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8")
+          report = report.replace(start, "").replace(end, "").strip("\n")
+          i = text.find(start)
+          j = text.find(end, i + len(start)) if i >= 0 else -1
+          if i < 0 or j < 0:
+              sys.exit("README.md has no " + start + " ... " + end + " marker pair")
+          new = text[: i + len(start)] + "\n" + report + "\n" + text[j:]
+          if new != text:
+              readme.write_text(new, encoding="utf-8")
+          PY
+
+      # Branch protection on master must let github-actions push (add it to the bypass list),
+      # or replace this step with one that opens a pull request.
+      - name: Commit and push
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- README.md; then
+            echo "README.md is up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "docs: update compliance.tf controls report [skip ci]"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
