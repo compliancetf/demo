@@ -29,3 +29,13 @@ exceptions:
     owner: antonbabenko
     approved_by: antonbabenko
     review_date: "2027-06-30"
+
+  - id: demo-ecs-log-retention
+    control: cloudwatch_log_group_retention_period_365
+    resource: module.ecs
+    justification: >-
+      Dev environment keeps container logs for 30 days for cost. Production keeps the 365-day
+      retention the control requires.
+    owner: antonbabenko
+    approved_by: antonbabenko
+    review_date: "2027-06-30"
