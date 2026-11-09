@@ -39,4 +39,6 @@ runs:
         {
           echo "TF_TOKEN_iso27001_compliance_tf=${CTF_TOKEN}"
           echo "NETRC=${netrc}"
+          # The registry prepares a module on its first download; the 10s default can time out.
+          echo "TF_REGISTRY_CLIENT_TIMEOUT=60"
         } >> "${GITHUB_ENV}"

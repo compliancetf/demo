@@ -11,6 +11,8 @@ export AWS_PROFILE AWS_REGION
 export TF_TOKEN_iso27001_compliance_tf := $(CTF_REGISTRY_TOKEN)
 NETRC ?= $(CURDIR)/.netrc
 export NETRC
+TF_REGISTRY_CLIENT_TIMEOUT ?= 60
+export TF_REGISTRY_CLIENT_TIMEOUT
 
 TF := terraform -chdir=infra
 PLAN_JSON := infra/plan.json
