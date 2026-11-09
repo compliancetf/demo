@@ -26,5 +26,5 @@ module "ops" {
   }
 
   # insecure on purpose: compliance.tf enforces ec2_instance_uses_imdsv2
-  metadata_options = { http_tokens = "optional" } # demo:insecure
+  # demo:insecure metadata_options = { http_tokens = "optional" }
 }

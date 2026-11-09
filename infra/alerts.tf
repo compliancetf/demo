@@ -6,6 +6,6 @@ module "sns" {
   name = local.ops_alerts_topic_name
 
   # insecure on purpose: compliance.tf enforces sns_topic_encrypted_at_rest
-  kms_master_key_id = null # demo:insecure
-  # demo:secure kms_master_key_id = module.kms.key_arn
+  # demo:insecure kms_master_key_id = null
+  kms_master_key_id = module.kms.key_arn # demo:secure
 }
