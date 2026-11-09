@@ -18,14 +18,14 @@ variable "state_bucket_prefix" {
 }
 
 variable "github_repository" {
-  description = "GitHub repository (owner/name) allowed to assume the plan role"
+  description = "Repository part of the GitHub OIDC subject allowed to assume the plan role: owner/name, or owner@id/name@id when the repository uses immutable subjects (gh api repos/OWNER/NAME/actions/oidc/customization/sub)"
   type        = string
-  default     = "compliancetf/demo"
+  default     = "compliancetf@229979573/demo@1451297323"
   nullable    = false
 
   validation {
-    condition     = can(regex("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", var.github_repository))
-    error_message = "github_repository must look like owner/name."
+    condition     = can(regex("^[A-Za-z0-9_.-]+(@[0-9]+)?/[A-Za-z0-9_.-]+(@[0-9]+)?$", var.github_repository))
+    error_message = "github_repository must look like owner/name or owner@id/name@id."
   }
 }
 
