@@ -1,5 +1,5 @@
 module "zone" {
-  source  = "terraform-aws-modules/route53/aws"
+  source  = "iso27001.compliance.tf/terraform-aws-modules/route53/aws"
   version = "6.5.1"
 
   name    = "order.internal"

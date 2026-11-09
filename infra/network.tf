@@ -1,6 +1,6 @@
 # Lines tagged demo:* are toggled by scripts/demo-mode.sh for the live demo.
 module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
+  source  = "iso27001.compliance.tf/terraform-aws-modules/vpc/aws"
   version = "6.7.3"
 
   name = var.name

@@ -1,6 +1,6 @@
 # Lines tagged demo:* are toggled by scripts/demo-mode.sh for the live demo.
 module "sns" {
-  source  = "terraform-aws-modules/sns/aws"
+  source  = "iso27001.compliance.tf/terraform-aws-modules/sns/aws"
   version = "7.2.0"
 
   name = local.ops_alerts_topic_name

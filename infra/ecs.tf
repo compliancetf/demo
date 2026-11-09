@@ -10,7 +10,7 @@ locals {
 }
 
 module "ecs" {
-  source  = "terraform-aws-modules/ecs/aws"
+  source  = "iso27001.compliance.tf/terraform-aws-modules/ecs/aws"
   version = "7.6.1"
 
   cluster_name = var.name

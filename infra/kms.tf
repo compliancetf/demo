@@ -6,7 +6,7 @@ locals {
 }
 
 module "kms" {
-  source  = "terraform-aws-modules/kms/aws"
+  source  = "iso27001.compliance.tf/terraform-aws-modules/kms/aws"
   version = "4.2.2"
 
   description             = "${var.name} CMK for logs and alerts"
