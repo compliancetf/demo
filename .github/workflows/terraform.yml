@@ -125,7 +125,10 @@ jobs:
               echo "compliance.tf blocked these inputs (control id and fix):"
               echo
               echo "<pre>"
-              grep -o "Control '[^']*'.*" plan.log | sort -u | head -c 20000 | esc
+              # Terraform wraps each message: join a "Control '<id>'" paragraph into one line.
+              sed 's/^│ *//' plan.log \
+                | awk '/^Control \047/ { p = 1; s = "" } p { if ($0 == "") { print s; p = 0 } else s = s (s == "" ? "" : " ") $0 } END { if (p) print s }' \
+                | sort -u | head -c 20000 | esc
               echo "</pre>"
             fi
             echo "<details><summary>Show output</summary>"
