@@ -29,3 +29,26 @@ exceptions:
     owner: antonbabenko
     approved_by: antonbabenko
     review_date: "2027-06-30"
+
+  # The route53 module calls terraform-aws-modules/kms from registry.terraform.io for DNSSEC signing,
+  # with create = enable_dnssec && create_dnssec_kms_key. module.zone leaves enable_dnssec at false,
+  # so the nested module is installed by init but creates nothing.
+  - id: demo-zone-dnssec-kms-manifest
+    rule: ctf.coverage.manifest_missing
+    resource: module.zone.module.route53_dnssec_kms
+    justification: >-
+      DNSSEC is off for module.zone, so the nested DNSSEC KMS module creates no resource and leaves
+      no evidence gap. Remove this entry if enable_dnssec is turned on.
+    owner: antonbabenko
+    approved_by: antonbabenko
+    review_date: "2027-06-30"
+
+  - id: demo-zone-dnssec-kms-endpoint
+    rule: ctf.exec.module_endpoint
+    resource: module.zone.module.route53_dnssec_kms
+    justification: >-
+      The route53 module pins this nested call to terraform-aws-modules/kms/aws 4.0.0. DNSSEC is off
+      for module.zone, so the module creates nothing. Remove this entry if enable_dnssec is turned on.
+    owner: antonbabenko
+    approved_by: antonbabenko
+    review_date: "2027-06-30"
