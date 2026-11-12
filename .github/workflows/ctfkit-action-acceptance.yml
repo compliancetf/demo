@@ -50,7 +50,7 @@ jobs:
 
       - name: ctfkit report
         id: ctfkit
-        uses: compliancetf/ctfkit-action@79337bddf2227a055027313f7edc2b55027d097a # v0.6.0
+        uses: compliancetf/ctfkit-action@0266935d8affa112784918f68aff3a6957977733 # master after v0.6.0
         with:
           command: report
           version: v0.8.0
@@ -77,4 +77,15 @@ jobs:
               rc=1
             fi
           done
+          # clean must pass (0); injected must fail on findings (1), not on an error (2).
+          expected=0
+          case "${GITHUB_REF_NAME}" in */injected) expected=1 ;; esac
+          if [ "${EXIT_CODE}" != "${expected}" ]; then
+            echo "::error::exit-code is '${EXIT_CODE}', expected ${expected}"
+            rc=1
+          fi
+          if [ "${expected}" = 1 ] && [ -f "${SARIF}" ]; then
+            open=$(jq '[.runs[].results[]? | select(.ruleId == "ctf.coverage.manifest_missing" and ((.suppressions // []) | length == 0))] | length' "${SARIF}")
+            [ "${open}" -ge 1 ] || { echo "::error::no unsuppressed ctf.coverage.manifest_missing finding"; rc=1; }
+          fi
           exit "${rc}"
