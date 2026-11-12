@@ -28,6 +28,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      security-events: write # SARIF upload to the Security tab
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -37,16 +38,16 @@ jobs:
       # The registry is read from the checkout, so a pull request can edit it; CODEOWNERS owns
       # .github/ and branch protection must require a code owner review (see the file header).
       - name: ctfkit scan (pre_plan)
-        uses: compliancetf/ctfkit-action@a138129e2c59f256e38440e070f88f3ac490d2dd # v0.4.0
+        uses: compliancetf/ctfkit-action@0266935d8affa112784918f68aff3a6957977733 # v0.7.0
         with:
           command: scan
-          # 0.5.0 embeds only CIS v6.0 controls, so control-keyed ISO exceptions stop matching.
-          version: v0.4.1
+          version: v0.9.0
           stage: pre_plan
           chdir: infra
           exceptions: .github/ctfkit/exceptions.yaml
           pr-comment: ${{ github.event_name == 'pull_request' }}
-          sarif: "false"
+          sarif: "true"
+          category: ctfkit/pre_plan
           fail-on: error
 
   plan:
@@ -57,7 +58,7 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
-      security-events: write # post_plan scan uploads SARIF to the Security tab
+      security-events: write # SARIF upload to the Security tab
     defaults:
       run:
         working-directory: infra
@@ -157,26 +158,24 @@ jobs:
       - name: ctfkit scan (post_plan)
         id: scan
         if: ${{ steps.show.outcome == 'success' }}
-        uses: compliancetf/ctfkit-action@a138129e2c59f256e38440e070f88f3ac490d2dd # v0.4.0
+        uses: compliancetf/ctfkit-action@0266935d8affa112784918f68aff3a6957977733 # v0.7.0
         with:
           command: scan
-          # 0.5.0 embeds only CIS v6.0 controls, so control-keyed ISO exceptions stop matching.
-          version: v0.4.1
+          version: v0.9.0
           plan: infra/plan.json
           chdir: infra
           exceptions: .github/ctfkit/exceptions.yaml
           pr-comment: "false"
-          # The only SARIF upload: the action uses the fixed category "ctfkit", so a second upload
-          # on the same commit (pre_plan or report) would replace this one in the Security tab.
+          # Own category, so this upload and the pre_plan one do not replace each other.
           sarif: "true"
+          category: ctfkit/post_plan
           fail-on: error
 
-      # Coverage report only; the scans decide pass or fail. Uses the latest ctfkit:
-      # 0.4.1 stops on a served control its embedded catalog lacks.
+      # Coverage report only; the scans decide pass or fail. Uses the latest ctfkit.
       - name: ctfkit report
         if: ${{ !cancelled() && steps.show.outcome == 'success' }}
         continue-on-error: true
-        uses: compliancetf/ctfkit-action@a138129e2c59f256e38440e070f88f3ac490d2dd # v0.4.0
+        uses: compliancetf/ctfkit-action@0266935d8affa112784918f68aff3a6957977733 # v0.7.0
         with:
           command: report
           path: infra

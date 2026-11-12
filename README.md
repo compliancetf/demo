@@ -187,9 +187,18 @@ Nothing is applied from CI. Jobs run on self-hosted runners and skip pull reques
 
 ### Security tab
 
-The plan scan also uploads its findings as SARIF to the repository's [Security tab](https://github.com/compliancetf/demo/security/code-scanning) (code scanning, category `ctfkit`). Each finding stays open until a later scan no longer reports it. Findings from pushes to `master` are the repository's alerts; findings from a pull request show in that pull request's checks and on the diff.
+Both scans upload their findings as SARIF to GitHub code scanning, each under its own category: `ctfkit/pre_plan` for the configuration scan and `ctfkit/post_plan` for the plan scan. On a pull request the findings show in the pull request's checks and as annotations on the diff. On `master` they become the repository's alerts on the [Security tab](https://github.com/compliancetf/demo/security/code-scanning), which GitHub shows only to people with write access.
 
-Only the plan scan uploads. The ctfkit action always uses the same category, so a second upload on the same commit would replace the first. The configuration scan and the coverage report stay in the pull request comments and the job summary.
+Each alert carries:
+
+- the rule name and family as filter tags (`coverage`, `policy`, ...)
+- a severity badge: ctfkit errors show as high, warnings as medium, notes as low
+- a help panel with what the rule reports, how to record an exception for it, and a link to the [analyzer reference](https://compliance.tf/docs/ctfkit/analyzers/)
+- in the message, the compliance.tf module source that would close the gap, where there is one
+
+A finding covered by an entry in [.github/ctfkit/exceptions.yaml](.github/ctfkit/exceptions.yaml) is not uploaded: code scanning ignores the SARIF suppression and would show it as an open alert. It stays in the job summary as suppressed. On `master` today both scans pass and every finding is covered by an exception, so the Security tab has no open alerts. Open a pull request from `baseline` to see the full set.
+
+The coverage report stays in the pull request comment and the job summary.
 
 Code scanning is free on public repositories. A private copy of this repository needs GitHub Code Security for the upload to work.
 
