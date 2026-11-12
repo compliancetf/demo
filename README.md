@@ -180,7 +180,7 @@ make destroy           # afterwards; about $2 a day while running
 
 [terraform.yml](.github/workflows/terraform.yml) runs on every pull request:
 
-- `ctfkit scan` checks the configuration offline. It needs no credentials.
+- `ctfkit scan` checks the configuration without `terraform init` or AWS credentials. It uses the registry token only to download the full control catalog: the catalog built into ctfkit holds the CIS v6.0 controls only, and the exceptions name ISO 27001 controls.
 - `terraform plan` assumes the read-only role through OIDC, plans with `-lock=false`, scans the plan and posts one comment with the result.
 
 Nothing is applied from CI. Jobs run on self-hosted runners and skip pull requests from forks.
