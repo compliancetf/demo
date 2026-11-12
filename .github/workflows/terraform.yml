@@ -34,12 +34,17 @@ jobs:
         with:
           persist-credentials: false
 
-      # pre_plan reads configuration only: no init, no AWS, no registry token.
+      # pre_plan reads configuration only: no init, no AWS. The registry token only downloads the
+      # full control catalog (catalog: pull); the embedded one holds CIS v6.0 controls only, so the
+      # ISO 27001 control ids in the exceptions would not resolve.
       # The registry is read from the checkout, so a pull request can edit it; CODEOWNERS owns
       # .github/ and branch protection must require a code owner review (see the file header).
       - name: ctfkit scan (pre_plan)
         uses: compliancetf/ctfkit-action@0266935d8affa112784918f68aff3a6957977733 # v0.7.0
+        env:
+          TF_TOKEN_registry_compliance_tf: ${{ secrets.CTF_REGISTRY_TOKEN }}
         with:
+          catalog: pull
           command: scan
           version: v0.9.0
           stage: pre_plan
@@ -159,7 +164,11 @@ jobs:
         id: scan
         if: ${{ steps.show.outcome == 'success' }}
         uses: compliancetf/ctfkit-action@0266935d8affa112784918f68aff3a6957977733 # v0.7.0
+        env:
+          TF_TOKEN_registry_compliance_tf: ${{ secrets.CTF_REGISTRY_TOKEN }}
         with:
+          # Full catalog, as in the scan job: the exceptions name ISO 27001 controls.
+          catalog: pull
           command: scan
           version: v0.9.0
           plan: infra/plan.json
