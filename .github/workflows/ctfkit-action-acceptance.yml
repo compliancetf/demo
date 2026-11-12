@@ -1,0 +1,80 @@
+name: ctfkit action acceptance
+
+# Acceptance runs of compliancetf/ctfkit-action at a pinned release, on throwaway branches only:
+# ctfkit-acceptance/clean must pass, ctfkit-acceptance/injected removes one module manifest and must fail.
+on:
+  push:
+    branches: ["ctfkit-acceptance/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    name: ctfkit report (${{ github.ref_name }})
+    runs-on: runs-on=${{ github.run_id }}/runner=2cpu-linux-x64/env=compliancetf
+    permissions:
+      contents: read
+      security-events: write # SARIF upload to the Security tab
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.17.1
+          terraform_wrapper: false
+
+      - uses: ./.github/actions/registry-auth
+        with:
+          token: ${{ secrets.CTF_REGISTRY_TOKEN }}
+
+      # report reads the module cache only: no backend, so no AWS credentials.
+      - name: terraform init
+        working-directory: infra
+        run: terraform init -backend=false -input=false
+
+      # Without its compliancetf-manifest.json the sns module is reported as ctf.coverage.manifest_missing.
+      - name: Remove the sns module manifest (injected only)
+        if: ${{ endsWith(github.ref_name, '/injected') }}
+        working-directory: infra
+        run: |
+          set -euo pipefail
+          dir=$(jq -r '.Modules[] | select(.Key == "sns") | .Dir' .terraform/modules/modules.json)
+          manifest="${dir}/compliancetf-manifest.json"
+          test -f "${manifest}" || { echo "::error::${manifest} not found" >&2; exit 1; }
+          rm "${manifest}"
+          echo "Removed ${manifest}"
+
+      - name: ctfkit report
+        id: ctfkit
+        uses: compliancetf/ctfkit-action@79337bddf2227a055027313f7edc2b55027d097a # v0.6.0
+        with:
+          command: report
+          version: v0.8.0
+          path: infra
+          exceptions: .github/ctfkit/exceptions.yaml
+          sarif: "true"
+          pr-comment: "false"
+
+      - name: Check outputs
+        if: ${{ always() }}
+        env:
+          RECEIPT: ${{ steps.ctfkit.outputs.receipt }}
+          SARIF: ${{ steps.ctfkit.outputs.sarif }}
+          MARKDOWN: ${{ steps.ctfkit.outputs.markdown }}
+          EXIT_CODE: ${{ steps.ctfkit.outputs.exit-code }}
+        run: |
+          set -euo pipefail
+          printf 'receipt=%s\nsarif=%s\nmarkdown=%s\nexit-code=%s\n' "${RECEIPT}" "${SARIF}" "${MARKDOWN}" "${EXIT_CODE}"
+          rc=0
+          for name in RECEIPT SARIF MARKDOWN; do
+            path="${!name}"
+            if [ -z "${path}" ] || [ ! -f "${path}" ]; then
+              echo "::error::output ${name,,} is empty or not a file: '${path}'"
+              rc=1
+            fi
+          done
+          exit "${rc}"
