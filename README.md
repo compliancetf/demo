@@ -185,6 +185,14 @@ make destroy           # afterwards; about $2 a day while running
 
 Nothing is applied from CI. Jobs run on self-hosted runners and skip pull requests from forks.
 
+### Security tab
+
+The plan scan also uploads its findings as SARIF to the repository's [Security tab](https://github.com/compliancetf/demo/security/code-scanning) (code scanning, category `ctfkit`). Each finding stays open until a later scan no longer reports it. Findings from pushes to `master` are the repository's alerts; findings from a pull request show in that pull request's checks and on the diff.
+
+Only the plan scan uploads. The ctfkit action always uses the same category, so a second upload on the same commit would replace the first. The configuration scan and the coverage report stay in the pull request comments and the job summary.
+
+Code scanning is free on public repositories. A private copy of this repository needs GitHub Code Security for the upload to work.
+
 ## What this does not prove
 
 The checks run on configuration and plans. They do not watch the live account, so keep your CSPM or AWS Config for drift and console changes. Controls marked mapped-only on the framework page need another control.

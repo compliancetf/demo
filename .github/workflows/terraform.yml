@@ -57,6 +57,7 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
+      security-events: write # post_plan scan uploads SARIF to the Security tab
     defaults:
       run:
         working-directory: infra
@@ -165,7 +166,9 @@ jobs:
           chdir: infra
           exceptions: .github/ctfkit/exceptions.yaml
           pr-comment: "false"
-          sarif: "false"
+          # The only SARIF upload: the action uses the fixed category "ctfkit", so a second upload
+          # on the same commit (pre_plan or report) would replace this one in the Security tab.
+          sarif: "true"
           fail-on: error
 
       # Coverage report only; the scans decide pass or fail. Uses the latest ctfkit:
