@@ -166,6 +166,7 @@ Then:
 make login             # writes a local .netrc for HTTPS module sources
 make baseline-branch   # upstream sources + insecure inputs on branch baseline
 make apply-baseline    # about 5 minutes
+make scan-baseline     # push baseline and run the CI scan on it (Security tab alerts)
 make verify            # on master: plan is clean, 0 to add, 0 to destroy
 make verify-fail       # the insecure variant fails with the expected control ids
 make demo-pr           # step 2
@@ -196,7 +197,7 @@ Each alert carries:
 - a help panel with what the rule reports, how to record an exception for it, and a link to the [analyzer reference](https://compliance.tf/docs/ctfkit/analyzers/)
 - in the message, the compliance.tf module source that would close the gap, where there is one
 
-A finding covered by an entry in [.github/ctfkit/exceptions.yaml](.github/ctfkit/exceptions.yaml) is not uploaded: code scanning ignores the SARIF suppression and would show it as an open alert. It stays in the job summary as suppressed. On `master` today both scans pass and every finding is covered by an exception, so the Security tab has no open alerts. Open a pull request from `baseline` to see the full set.
+A finding covered by an entry in [.github/ctfkit/exceptions.yaml](.github/ctfkit/exceptions.yaml) is not uploaded: code scanning ignores the SARIF suppression and would show it as an open alert. It stays in the job summary as suppressed. On `master` today both scans pass and every finding is covered by an exception, so the Security tab has no open alerts. Branch `baseline` (step 1 of the demo flow) has the [open alerts](https://github.com/compliancetf/demo/security/code-scanning?query=is%3Aopen+branch%3Abaseline): one `ctf.coverage.module_source` alert per upstream module source. A push to `baseline` does not run CI; `make scan-baseline` runs the configuration scan there. The plan job does not run on that branch, because the plan role trusts only pull requests and `master`. The `demo/iso27001` pull request switches those sources to compliance.tf, and its code scanning check reports no new alerts.
 
 The coverage report stays in the pull request comment and the job summary.
 

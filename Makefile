@@ -24,7 +24,7 @@ EXPECTED_CONTROLS := kms_cmk_rotation_enabled sns_topic_encrypted_at_rest vpc_su
 # Resource precondition: Terraform checks it only once validations pass, so it gets its own plan.
 PRECONDITION_CONTROL := ecs_service_not_publicly_accessible
 
-.PHONY: help check-tools login bootstrap init scan plan report baseline-branch apply-baseline verify verify-fail demo-pr demo-fix exception-pr record-exception destroy clean require-clean require-backend
+.PHONY: help check-tools login bootstrap init scan plan report baseline-branch apply-baseline scan-baseline verify verify-fail demo-pr demo-fix exception-pr record-exception destroy clean require-clean require-backend
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -83,6 +83,10 @@ apply-baseline: require-clean require-backend ## Check out baseline and apply it
 	git checkout baseline
 	$(TF) init -reconfigure -backend-config=backend.hcl
 	$(TF) apply
+
+scan-baseline: ## Push branch baseline and run the CI scan on it: its findings become open alerts on the Security tab
+	git push --force-with-lease origin baseline
+	gh workflow run terraform.yml --ref baseline
 
 verify: require-backend login ## On master (ISO sources, secure inputs): plan, assert in-place changes only, report
 	@grep -q 'iso27001.compliance.tf' infra/*.tf || { echo "infra/ does not use compliance.tf sources: check out master" >&2; exit 1; }
