@@ -33,8 +33,7 @@ locals {
 module "alb" {
   # Public entry point by design; exception recorded.
   # Compensating controls: access logs, security group allows only 80/443, targets stay private.
-  source  = "terraform-aws-modules/alb/aws"
-  version = "10.5.1"
+  source = "https://iso27001.compliance.tf/terraform-aws-modules/alb/aws?version=10.5.1&disable=elb_application_classic_network_lb_prohibit_public_access"
 
   name     = var.name
   internal = false

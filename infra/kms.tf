@@ -6,7 +6,7 @@ locals {
 }
 
 module "kms" {
-  source  = "terraform-aws-modules/kms/aws"
+  source  = "iso27001.compliance.tf/terraform-aws-modules/kms/aws"
   version = "4.2.2"
 
   description             = "${var.name} CMK for logs and alerts"
@@ -14,7 +14,7 @@ module "kms" {
   deletion_window_in_days = 7
 
   # insecure on purpose: compliance.tf enforces kms_cmk_rotation_enabled
-  enable_key_rotation = false # demo:insecure
+  # demo:insecure enable_key_rotation = false
 
   # Default policy (account root delegation) stays on; these add the service grants.
   key_statements = [

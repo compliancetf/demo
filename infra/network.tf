@@ -1,6 +1,6 @@
 # Lines tagged demo:* are toggled by scripts/demo-mode.sh for the live demo.
 module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
+  source  = "iso27001.compliance.tf/terraform-aws-modules/vpc/aws"
   version = "6.7.3"
 
   name = var.name
@@ -14,7 +14,7 @@ module "vpc" {
   single_nat_gateway = true
 
   # insecure on purpose: compliance.tf enforces vpc_subnet_auto_assign_public_ip_disabled
-  map_public_ip_on_launch = true # demo:insecure
+  # demo:insecure map_public_ip_on_launch = true
 
   # Account-and-region wide setting: deploy into a dedicated demo account.
   # block-ingress keeps NAT egress working for the private subnets.
